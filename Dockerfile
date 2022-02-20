@@ -1,4 +1,4 @@
-FROM rust:latest as builder
+FROM rust:alpine as builder
 
 WORKDIR /app
 
@@ -6,7 +6,11 @@ COPY . .
 
 RUN cargo build --release
 
-FROM alpine:latest
+FROM alpine
+
+RUN apk add gcompat
+
+WORKDIR /app
 
 EXPOSE 8000
 
@@ -16,6 +20,6 @@ ENV ROCKET_ADDRESS = "0.0.0.0"
 ENV POLL_RATE = "10"
 ENV DEFAULT_TIMEOUT = "120"
 
-COPY --from=builder /app/release/heartbeat .
+COPY --from=builder /app/target/release/heartbeat .
 
 CMD ["./heartbeat"]

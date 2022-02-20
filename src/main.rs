@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::{env, thread};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
+use rocket::response::Redirect;
 
 use rocket::State;
 
@@ -46,6 +47,11 @@ fn online() -> &'static str {
     "I'm online!"
 }
 
+#[get("/")]
+fn redirect_to_repo() -> Redirect {
+    Redirect::to("https://github.com/ondolin/heartbeat")
+}
+
 #[launch]
 fn rocket() -> _ {
 
@@ -79,5 +85,5 @@ fn rocket() -> _ {
 
     });
 
-    rocket::build().manage(services_rocket_clone).mount("/", routes![report, online])
+    rocket::build().manage(services_rocket_clone).mount("/", routes![report, online, redirect_to_repo])
 }
