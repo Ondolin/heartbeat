@@ -1,5 +1,5 @@
 [package]
-name = "heartbeat"
+name = "heartbeat-server"
 version = "0.1.0"
 license-file = "LICENSE"
 edition = "2021"
