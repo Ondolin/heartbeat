@@ -1,25 +1,18 @@
-FROM rust:latest as builder
+FROM rust:slim
 
 WORKDIR /app
 
 COPY . .
 
-RUN cargo build --release
+RUN cargo install --path .
 
-FROM alpine
-
-RUN apk add gcompat libgcc
-
-WORKDIR /app
 
 EXPOSE 8000
 
 ENV TELEGRAM_TARGET_CHAT = ""
 ENV TELEGRAM_BOT_TOKEN = ""
-ENV ROCKET_ADDRESS = "0.0.0.0"
+ENV ROCKET_ADDRESS = 0.0.0.0
 ENV POLL_RATE = "10"
 ENV DEFAULT_TIMEOUT = "120"
 
-COPY --from=builder /app/target/release/heartbeat .
-
-CMD ["./heartbeat"]
+CMD heartbeat
