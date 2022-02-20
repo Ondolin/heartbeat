@@ -8,7 +8,7 @@ RUN cargo build --release
 
 FROM alpine
 
-RUN apk add gcompat
+RUN apk add gcompat libgcc
 
 WORKDIR /app
 
