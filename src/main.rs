@@ -20,7 +20,6 @@ fn rocket() -> _ {
     let services = Arc::new(Mutex::new(hash_map));
 
     let services_clone = services.clone();
-    let services_rocket_clone = services.clone();
 
     // monitoring thread
     thread::spawn(move || loop {
@@ -44,5 +43,5 @@ fn rocket() -> _ {
 
     });
 
-    rocket::build().manage(services_rocket_clone).mount("/", routes![report, online, redirect_to_repo, is_service_online])
+    rocket::build().manage(services).mount("/", routes![report, online, redirect_to_repo, is_service_online])
 }
