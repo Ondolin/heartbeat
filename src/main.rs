@@ -7,6 +7,7 @@ use std::thread::sleep;
 use std::time::{Duration, Instant};
 use rocket::http::Status;
 use rocket::response::Redirect;
+use rocket::response::status::NotFound;
 
 use rocket::State;
 
@@ -51,18 +52,19 @@ fn report(user: String, service_id: String, timeout: Option<u64>, last_heartbeat
 }
 
 #[get("/report/<user>/<service_id>")]
-fn is_service_online(user: String, service_id: String, last_heartbeat: &State<Arc<Mutex<HashMap<String, ServiceInfo>>>>) -> Option<String> {
+fn is_service_online(user: String, service_id: String, last_heartbeat: &State<Arc<Mutex<HashMap<String, ServiceInfo>>>>) -> Result<String, NotFound<String>> {
 
     let hash_map = last_heartbeat.lock().unwrap();
 
     return match hash_map.get(&format!("{}/{}", user, service_id)) {
-        None => {None}
+        None => {
+            Err(NotFound(format!("{}/{} is not registered", user, service_id)))
+        },
         Some(service) => {
             if service.is_offline {
-                // TODO: write that the service is offline
-                return None;
+                Err(NotFound(format!("{}/{} is not offline", user, service_id)))
             } else {
-                Some(format!("Service {}/{} is online!", user, service_id))
+                Ok(format!("Service {}/{} is online!", user, service_id))
             }
         }
     };
