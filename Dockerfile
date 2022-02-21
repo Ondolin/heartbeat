@@ -15,4 +15,4 @@ ENV ROCKET_ADDRESS = 0.0.0.0
 ENV POLL_RATE = "10"
 ENV DEFAULT_TIMEOUT = "120"
 
-CMD heartbeat
+CMD heartbeat-server
