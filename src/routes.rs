@@ -1,41 +1,30 @@
 use std::collections::HashMap;
-use std::env;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use rocket::response::Redirect;
 use rocket::response::status::NotFound;
 use rocket::State;
 
-use crate::service::ServiceInfo;
+use crate::service::{Notifier, ServiceInfo};
 
 #[post("/report/<user>/<service_id>?<timeout>")]
 pub fn report(user: String, service_id: String, timeout: Option<u64>, last_heartbeat: &State<Arc<Mutex<HashMap<String, ServiceInfo>>>>) {
-    let default_timeout: Duration = Duration::from_secs(env::var("DEFAULT_TIMEOUT").unwrap().parse::<u64>().unwrap());
 
     let mut hash_map = last_heartbeat.lock().unwrap();
 
-    if !hash_map.contains_key(&format!("{}/{}", user, service_id)) {
-        let notifier = pling::Telegram::from_env().unwrap();
-        let message = format!("{}/{} has registered!", user, service_id);
-        notifier.send_sync(&*message).unwrap();
-    }
+    let service_name = format!("{}/{}", user, service_id);
 
-    let service_info = hash_map.entry(format!("{}/{}", user, service_id)).or_insert(ServiceInfo {
-        last_heartbeat: Instant::now(),
-        is_offline: false,
-        timeout: match timeout {
-            Some(timeout) => Duration::from_secs(timeout),
-            None => default_timeout,
-        },
+    let service_info = hash_map.entry(service_name.clone()).or_insert_with(|| {
+        let info = ServiceInfo::new(service_name, Notifier::new(), timeout);
+        info.notify_registered();
+        info
     });
 
-    eprintln!("Got request from {}/{}", user, service_id);
+    eprintln!("Got request from {}", service_info.name);
 
     // report that the service is online again 🎉
     if service_info.is_offline {
-        let notifier = pling::Telegram::from_env().unwrap();
-        let message = format!("{}/{} is back online!", user, service_id);
-        notifier.send_sync(&*message).unwrap();
+        service_info.notify_online();
     }
 
     service_info.last_heartbeat = Instant::now();

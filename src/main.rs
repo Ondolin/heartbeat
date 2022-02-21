@@ -25,16 +25,12 @@ fn rocket() -> _ {
     thread::spawn(move || loop {
         sleep(Duration::from_secs(env::var("POLL_RATE").unwrap().parse::<u64>().unwrap()));
 
-        let notifiers = pling::Telegram::from_env().unwrap();
-
-        services_clone.lock().unwrap().retain(|key, value|{
-
-            let service_name = key.to_string();
+        services_clone.lock().unwrap().retain(|_, value|{
+            
             let service_info = value;
 
-            if service_info.last_heartbeat.elapsed() > service_info.timeout && !service_info.is_offline {
-                service_info.is_offline = true;
-                notifiers.send_sync(&*format!("{} is dead", service_name)).unwrap();
+            if service_info.is_timeout() && !service_info.is_offline {
+                service_info.make_dead();
             }
 
             true
