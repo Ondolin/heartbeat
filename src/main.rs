@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::{env, thread};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
+use rocket::http::Status;
 use rocket::response::Redirect;
 
 use rocket::State;
@@ -15,7 +16,7 @@ struct ServiceInfo {
     timeout: Duration,
 }
 
-#[get("/report/<user>/<service_id>?<timeout>")]
+#[post("/report/<user>/<service_id>?<timeout>")]
 fn report(user: String, service_id: String, timeout: Option<u64>, last_heartbeat: &State<Arc<Mutex<HashMap<String, ServiceInfo>>>>) {
     let default_timeout: Duration = Duration::from_secs(env::var("DEFAULT_TIMEOUT").unwrap().parse::<u64>().unwrap());
 
@@ -47,6 +48,25 @@ fn report(user: String, service_id: String, timeout: Option<u64>, last_heartbeat
 
     service_info.last_heartbeat = Instant::now();
     service_info.is_offline = false;
+}
+
+#[get("/report/<user>/<service_id>")]
+fn is_service_online(user: String, service_id: String, last_heartbeat: &State<Arc<Mutex<HashMap<String, ServiceInfo>>>>) -> Option<String> {
+
+    let hash_map = last_heartbeat.lock().unwrap();
+
+    return match hash_map.get(&format!("{}/{}", user, service_id)) {
+        None => {None}
+        Some(service) => {
+            if service.is_offline {
+                // TODO: write that the service is offline
+                return None;
+            } else {
+                Some(format!("Service {}/{} is online!", user, service_id))
+            }
+        }
+    };
+
 }
 
 #[get("/online")]
@@ -92,5 +112,5 @@ fn rocket() -> _ {
 
     });
 
-    rocket::build().manage(services_rocket_clone).mount("/", routes![report, online, redirect_to_repo])
+    rocket::build().manage(services_rocket_clone).mount("/", routes![report, online, redirect_to_repo, is_service_online])
 }
