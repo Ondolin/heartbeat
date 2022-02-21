@@ -20,6 +20,13 @@ fn report(user: String, service_id: String, timeout: Option<u64>, last_heartbeat
     let default_timeout: Duration = Duration::from_secs(env::var("DEFAULT_TIMEOUT").unwrap().parse::<u64>().unwrap());
 
     let mut hash_map = last_heartbeat.lock().unwrap();
+
+    if !hash_map.contains_key(&format!("{}/{}", user, service_id)) {
+        let notifier = pling::Telegram::from_env().unwrap();
+        let message = format!("{}/{} has registered!", user, service_id);
+        notifier.send_sync(&*message).unwrap();
+    }
+
     let service_info = hash_map.entry(format!("{}/{}", user, service_id)).or_insert(ServiceInfo {
         last_heartbeat: Instant::now(),
         is_offline: false,
