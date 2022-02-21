@@ -14,7 +14,7 @@ There are two ways to install it:
 
 1. clone the repository
 2. run `cargo install --path .`
-3. run `heartbeat`
+3. run `heartbeat-server`
 
 ### Docker
 
