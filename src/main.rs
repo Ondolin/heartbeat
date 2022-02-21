@@ -5,7 +5,6 @@ use std::sync::{Arc, Mutex};
 use std::{env, thread};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
-use rocket::http::Status;
 use rocket::response::Redirect;
 use rocket::response::status::NotFound;
 
